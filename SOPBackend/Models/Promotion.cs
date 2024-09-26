@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MassTransit;
 
 namespace SOPBackend;
 
@@ -52,7 +53,7 @@ public class Promotion
 
     public Promotion(string code, decimal discount, DateTime startDate, DateTime endDate)
     {
-        Id = Guid.NewGuid();
+        Id = NewId.NextGuid();
         Code = code;
         Discount = discount;
         StartDate = startDate;

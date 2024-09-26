@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MassTransit;
+using SOPBackend.Utils;
 
 namespace SOPBackend;
 
@@ -9,7 +11,7 @@ public class MenuItem
     private string _name;
     private string _description;
     private decimal _price;
-    private string _category;
+    private Category _category;
 
     [Key]
     public Guid Id
@@ -20,21 +22,21 @@ public class MenuItem
 
     [Required]
     [MaxLength(36)]
-    private string Name
+    public string Name
     {
         get { return _name; }
         set { _name = value; }
     }
 
     [MaxLength(512)]
-    private string Description
+    public string Description
     {
         get { return _description; }
         set { _description = value; }
     }
 
     [Required]
-    private decimal Price
+    public decimal Price
     {
         get { return _price; }
         set { _price = value; }
@@ -42,21 +44,19 @@ public class MenuItem
 
     [Required]
     [MaxLength(50)]
-    private string Category
+    public Category Category
     {
         get { return _category; }
         set { _category = value; }
     }
 
-    public virtual ICollection<OrderItem> OrderItems { get; set; }
-
-    public MenuItem(string name, string description, decimal price, string category)
+    public MenuItem(string name, string description, decimal price, Category category)
     {
-        Id = Guid.NewGuid();
-        this.Name = name;
-        this.Description = description;
-        this.Price = price;
-        this.Category = category;
+        Id = NewId.NextGuid();
+        Name = name;
+        Description = description;
+        Price = price;
+        Category = category;
     }
 
     private MenuItem() { }

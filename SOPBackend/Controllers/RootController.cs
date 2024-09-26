@@ -22,36 +22,37 @@ namespace SOPBackend.Controllers
                         {
                             href = Url.Link("GetAllUsers", null),
                             method = "GET",
-                            description = "Find all users."
+                            rel = "Find all users."
                         },
                         getById = new
                         {
                             href = Url.Link("GetUserById", new { id = "someId" }),
                             method = "GET",
-                            description = "Find a user by Id."
+                            rel = "Find a user by Id."
                         },
                         create = new
                         {
                             href = Url.Link("CreateUser", null),
                             method = "POST",
-                            description = "Create a new user."
+                            rel = "Create a new user."
                         },
                         update = new
                         {
                             href = Url.Link("UpdateUser", new { id = "someId" }),
                             method = "PUT",
-                            description = "Update an existing user by ID."
+                            rel = "Update an existing user by ID."
                         },
                         delete = new
                         {
                             href = Url.Link("DeleteUser", new { id = "someId" }),
                             method = "DELETE",
-                            description = "Delete a user by ID."
+                            rel = "Delete a user by ID."
                         }
                     },
                 }
             );
         }
+        
     }
 }
 

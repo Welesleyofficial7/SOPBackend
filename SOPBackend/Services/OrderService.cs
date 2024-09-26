@@ -16,7 +16,9 @@ public class OrderService : IOrderService
 
     public Order? GetOrderById(Guid id)
     {
-        return _context.Orders.Find(id) ?? null;
+        var entry = _context.Orders.Find(id) ?? null;
+        _context.SaveChanges();
+        return entry;
     }
 
     public Order? CreateOrder(Order newUser)
@@ -26,6 +28,7 @@ public class OrderService : IOrderService
         if (check == null)
         {
             var entry = _context.Orders.Add(newUser);
+            _context.SaveChanges();
             return entry.Entity;
         }
 
@@ -35,16 +38,35 @@ public class OrderService : IOrderService
     public Order? UpdateOrder(Guid id, Order updatedUser)
     {
         var check = _context.Orders.Find(id);
-        if (check != null)
+        
+        if (check == null)
         {
-            _context.Orders.Update(updatedUser);
+            throw new Exception("Order not found!");
         }
 
-        return null;
+        check.Status = updatedUser.Status;
+        check.TotalCost = updatedUser.TotalCost;
+        check.OrderTime = updatedUser.OrderTime;
+        check.PromotionId = updatedUser.PromotionId;
+        check.OrderItems = updatedUser.OrderItems;
+
+        _context.Orders.Update(check);
+        _context.SaveChanges();
+
+        return check;
     }
 
     public bool DeleteOrder(Guid id)
     {
-        throw new NotImplementedException();
+        var check = _context.Orders.Find(id);
+
+        if (check != null)
+        {
+            _context.Orders.Remove(check);
+            _context.SaveChanges();
+            return true;
+        }
+
+        return false;
     }
 }

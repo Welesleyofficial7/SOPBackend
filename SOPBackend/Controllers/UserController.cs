@@ -19,27 +19,58 @@ namespace SOPBackend.Controllers
             _userService = userService;
             _mapper = mapper;
         }
-
         
-        
-        [HttpGet("/getAll", Name = "GetAllUsers")]
+        [HttpGet("getAll", Name = "GetAllUsers")]
         public IActionResult GetAllUsers()
         {
             var users = _userService.GetAllUsers().ToList();
+            var userDTOs = new List<UserDTO>();
+            users.ForEach(c => userDTOs.Add(_mapper.Map<UserDTO>(c)));
     
-            return Ok(new
-            {
-                users, 
-                _links = new
+            return Ok(
+                new
                 {
-                    self = new { href = Url.Link("GetAllUsers", null) }
-                },
-                count = users.Count 
-            });
+                    self = new { href = Url.Link("GetAllUsers", null) },
+                    userDTOs,
+                    _actions = new
+                    {
+                        getAll = new
+                        {
+                            href = Url.Link("GetAllUsers", null),
+                            method = "GET",
+                            rel = "Find all users."
+                        },
+                        getById = new
+                        {
+                            href = Url.Link("GetUserById", new { id = "someId" }),
+                            method = "GET",
+                            rel = "Find a user by Id."
+                        },
+                        create = new
+                        {
+                            href = Url.Link("CreateUser", null),
+                            method = "POST",
+                            rel = "Create a new user."
+                        },
+                        update = new
+                        {
+                            href = Url.Link("UpdateUser", new { id = "someId" }),
+                            method = "PUT",
+                            rel = "Update an existing user by ID."
+                        },
+                        delete = new
+                        {
+                            href = Url.Link("DeleteUser", new { id = "someId" }),
+                            method = "DELETE",
+                            rel = "Delete a user by ID."
+                        }
+                    },
+                }
+            );
         }
 
         
-        [HttpGet("/getById/{id}", Name = "GetUserById")]
+        [HttpGet("getById/{id}", Name = "GetUserById")]
         public IActionResult GetUserById(Guid id)
         {
             var user = _userService.GetUserById(id);
@@ -48,7 +79,7 @@ namespace SOPBackend.Controllers
             return Ok(userWithLinks);
         }
         
-        [HttpPost("/create", Name="CreateUser")]
+        [HttpPost("create", Name="CreateUser")]
         public IActionResult CreateUser([FromBody] UserDTO newUserDto)
         {
         
@@ -58,6 +89,7 @@ namespace SOPBackend.Controllers
             Console.WriteLine("");
         
             var createdUser = _userService.CreateUser(newUser);
+            var createdUserDTO = _mapper.Map<UserDTO>(createdUser);
             if (createdUser == null)
             {
                 return BadRequest("User already exists.");
@@ -65,11 +97,11 @@ namespace SOPBackend.Controllers
             
             AddUserLinks(createdUser);
         
-            return CreatedAtRoute("GetUserById", new { id = createdUser.Id }, createdUser);
+            return CreatedAtRoute("GetUserById", new { id = createdUser.Id }, createdUserDTO);
         }
 
         
-        [HttpPut("/update/{id}", Name="UpdateUser")]
+        [HttpPut("update/{id}", Name="UpdateUser")]
         public IActionResult UpdateUser(Guid id, [FromBody] UserDTO updatedUserDTO)
         {
             var updatedUser = _mapper.Map<User>(updatedUserDTO);
@@ -79,7 +111,7 @@ namespace SOPBackend.Controllers
             return Ok(userWithLinks);
         }
         
-        [HttpDelete("{id}", Name="DeleteUser")]
+        [HttpDelete("delete/{id}", Name="DeleteUser")]
         public IActionResult DeleteUser(Guid id)
         {
             var result = _userService.DeleteUser(id);

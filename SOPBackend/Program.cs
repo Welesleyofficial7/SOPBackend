@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SOPBackend;
+using SOPBackend.MappingProfiles;
 using SOPBackend.Repositories;
 using SOPBackend.Repositories.Interfaces;
 using SOPBackend.Services;
@@ -14,7 +15,11 @@ builder.Services.AddDbContext<ApplicationContext>(options =>
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<IUserService, UserService>(); 
-
+builder.Services.AddScoped<IOrderService, OrderService>(); 
+builder.Services.AddScoped<IMenuItemService, MenuItemService>(); 
+builder.Services.AddScoped<IOrderItemService, OrderItemService>(); 
+builder.Services.AddScoped<IPromotionService, PromotionService>();
+builder.Services.AddAutoMapper(typeof(UserProfile));
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddControllers();

@@ -16,9 +16,9 @@ namespace SOPBackend.Services
             return _context.Users.ToList(); 
         }
 
-        public User GetUserById(Guid id)
+        public User? GetUserById(Guid id)
         {
-            return _context.Users.Find(id); 
+            return _context.Users.Find(id);
         }
 
         public User? CreateUser(User newUser)

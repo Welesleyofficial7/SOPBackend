@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using MassTransit;
 
 namespace SOPBackend;
 
@@ -54,7 +55,7 @@ public class User
 
     public User(string Name, string Email, string PhoneNumber, string DestinationAddress)
     {
-        Id = Guid.NewGuid();
+        Id = NewId.NextGuid();
         this.Name = Name;
         this.Email = Email;
         this.PhoneNumber = PhoneNumber;

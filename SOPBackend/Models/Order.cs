@@ -2,13 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MassTransit;
+using SOPBackend.Utils;
 
 namespace SOPBackend;
 public class Order
 {
     private Guid _id;
     private Guid _userId;
-    private string _status;
+    private Status _status;
     private DateTime _orderTime;
     private decimal _totalCost;
     private Guid? _promotionId;
@@ -21,6 +23,7 @@ public class Order
     }
 
     [Required]
+    [Column("userid")]
     public Guid UserId
     {
         get { return _userId; }
@@ -29,26 +32,30 @@ public class Order
 
     [Required]
     [MaxLength(50)]
-    private string Status
+    [Column("status")]
+    public Status Status
     {
         get { return _status; }
         set { _status = value; }
     }
 
     [Required]
-    private DateTime OrderTime
+    [Column("ordertime")]
+    public DateTime OrderTime
     {
         get { return _orderTime; }
         set { _orderTime = value; }
     }
 
     [Required]
-    private decimal TotalCost
+    [Column("totalcost")]
+    public decimal TotalCost
     {
         get { return _totalCost; }
         set { _totalCost = value; }
     }
     
+    [Column("promotionid")]
     public Guid? PromotionId
     {
         get { return _promotionId; }
@@ -63,9 +70,9 @@ public class Order
 
     public virtual ICollection<OrderItem> OrderItems { get; set; }
 
-    public Order(Guid userId, string status, DateTime orderTime, decimal totalCost, Guid? promotionId = null)
+    public Order(Guid userId, Status status, DateTime orderTime, decimal totalCost, Guid? promotionId = null)
     {
-        Id = Guid.NewGuid();
+        Id = NewId.NextGuid();
         UserId = userId;
         Status = status;
         OrderTime = orderTime;

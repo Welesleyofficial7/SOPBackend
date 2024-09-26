@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using MassTransit;
 
 namespace SOPBackend;
 
@@ -33,14 +34,14 @@ public class OrderItem
     }
 
     [Required]
-    private int Quantity
+    public int Quantity
     {
         get { return _quantity; }
         set { _quantity = value; }
     }
 
     [Required]
-    private decimal Subtotal
+    public decimal Subtotal
     {
         get { return _subtotal; }
         set { _subtotal = value; }
@@ -54,7 +55,7 @@ public class OrderItem
 
     public OrderItem(Guid orderId, Guid menuItemId, int quantity, decimal subtotal)
     {
-        Id = Guid.NewGuid();
+        Id = NewId.NextGuid();
         OrderId = orderId;
         MenuItemId = menuItemId;
         Quantity = quantity;
