@@ -1,7 +1,9 @@
 using AutoMapper;
+using EasyNetQ;
 using Microsoft.AspNetCore.Mvc;
 using SOPBackend.DTOs;
 using SOPBackend.Services;
+using SOPBackend.Services.Utils;
 
 namespace SOPBackend.Controllers;
 
@@ -13,23 +15,27 @@ public class OrderController : ControllerBase
     private readonly IMenuItemService _menuItemService;
     private readonly IOrderItemService _orderItemService;
     private readonly IPromotionService _promotionService;
+    private readonly IUserService _userService;
     private readonly IMapper _mapper;
+    private readonly IBus _bus;
 
-    public OrderController(IOrderService orderService, IPromotionService promotionService, IMenuItemService menuItemService, IOrderItemService orderItemService, IMapper iMapper)
+    public OrderController(IOrderService orderService, IUserService userService, IPromotionService promotionService, IMenuItemService menuItemService, IOrderItemService orderItemService, IMapper iMapper, IBus bus)
     {
         _orderService = orderService;
         _menuItemService = menuItemService;
         _orderItemService = orderItemService;
         _promotionService = promotionService;
+        _userService = userService;
         _mapper = iMapper;
+        _bus = bus;
     }
     
-    [HttpGet("getAll", Name = "GetAllOrders")]
+        [HttpGet("getAll", Name = "GetAllOrders")]
         public IActionResult GetAllOrders()
         {
             var ordersList = _orderService.GetAllOrders().ToList();
-            var orders = new List<OrderDTO>();
-            ordersList.ForEach(c => orders.Add(_mapper.Map<OrderDTO>(c)));
+            var orders = new List<GetAllOrdersDTO>();
+            ordersList.ForEach(c => orders.Add(_mapper.Map<GetAllOrdersDTO>(c)));
             
             return Ok(
                 new
@@ -72,7 +78,55 @@ public class OrderController : ControllerBase
                 }
             );
         }
+        
+        private async Task PublishNewOrderMessage(Order order)
+        {
+            var message = order.ToMessage();
+            await _bus.PubSub.PublishAsync(message);
+        }
+        
+        private async Task PublishNewUserMessage(User user, Guid id)
+        {
+            var message = user.ToUserMessage(id);
+            await _bus.PubSub.PublishAsync(message);
+        }
+        
+        
+        [HttpPut("cancelOrder/{id}", Name="CancelOrder")]
+        public async Task<IActionResult> CancelOrder(Guid id)
+        {
+            var final = _orderService.CancelOrder(id);
+            if (final == null)
+            {
+                return NotFound("Order not found");
+            }
+            await PublishNewOrderMessage(final);
+            return Ok("Order cancelled!");
+        }
+        
+        [HttpPut("startPrepareOrder/{id}", Name="StartPrepareOrder")]
+        public async Task<IActionResult> StartPreparingOrder(Guid id)
+        {
+            var final = _orderService.StartPreparingOrder(id);
+            if (final == null)
+            {
+                return NotFound("Order not found");
+            }
+            await PublishNewOrderMessage(final);
+            return Ok("Start preparing order!");
+        }
 
+        [HttpPut("completeOrder/{id}", Name="CompleteOrder")]
+        public async Task<IActionResult> CompleteOrder(Guid id)
+        {
+            var final = _orderService.CompleteOrder(id);
+            if (final == null)
+            {
+                return NotFound("Order not found");
+            }
+            await PublishNewOrderMessage(final);
+            return Ok("Order completed!");
+        }
         
         [HttpGet("getById/{id}", Name = "GetOrderById")]
         public IActionResult GetOrderById(Guid id)
@@ -102,13 +156,13 @@ public class OrderController : ControllerBase
         }
         
         [HttpPost("placeOrder", Name = "PlaceOrderWithItems")]
-        public IActionResult PlaceOrderWithItems([FromBody] PlaceOrderDTO placeOrderDto)
+        public async Task<IActionResult> PlaceOrderWithItems([FromBody] PlaceOrderDTO placeOrderDto)
         {
             if (placeOrderDto == null || placeOrderDto.Items == null || !(placeOrderDto.Items.Count() > 0))
             {
-                return BadRequest("Order must have at least one item.");
+                return BadRequest("Заказ должен иметь хотя бы один элемент.");
             }
-    
+            
             decimal totalCost = 0;
             var orderItems = new List<OrderItem>();
 
@@ -130,20 +184,36 @@ public class OrderController : ControllerBase
             if (!placeOrderDto.PromotionId.ToString().Equals(""))
             {
                 var sale = _promotionService.GetPromotionById(placeOrderDto.PromotionId);
-                Console.WriteLine(sale.Discount);
-                totalCost = totalCost * (1-(sale.Discount / 100));
-                Console.WriteLine(totalCost);
+                if (sale != null && DateTime.Now >= sale.StartDate && DateTime.Now <= sale.EndDate)
+                {
+                    
+                    Console.WriteLine($"Discount applied: {sale.Discount}%");
+                    totalCost *= (1 - (sale.Discount / 100));
+                    Console.WriteLine($"Total cost after discount: {totalCost}");
+                }
             }
 
             var newOrder = new Order(placeOrderDto.UserId, 0, DateTime.UtcNow, totalCost, placeOrderDto.PromotionId);
             newOrder.OrderItems = orderItems;
 
             var createdOrder = _orderService.CreateOrder(newOrder);
-    
-            if (createdOrder == null)
+            
+            var user = _userService.GetUserById(placeOrderDto.UserId);
+            await PublishNewUserMessage(user, createdOrder.Id);
+            
+            var final = _orderService.StartPreparingOrder(createdOrder.Id);
+            if (final == null)
             {
-                return BadRequest("Failed to create order.");
+                return NotFound("Order not found");
             }
+            await PublishNewOrderMessage(final);
+            
+            var final2 = _orderService.ApplyDiscountOrder(createdOrder.Id);
+            if (final == null)
+            {
+                return NotFound("Order not found");
+            }
+            await PublishNewOrderMessage(final);
             
             var createdOrderDto = _mapper.Map<PlaceOrderDTO>(createdOrder);
     

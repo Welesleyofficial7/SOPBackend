@@ -1,3 +1,5 @@
+using SOPBackend.DTOs;
+
 namespace SOPBackend.Services;
 
 public interface IOrderService
@@ -7,4 +9,9 @@ public interface IOrderService
     Order? CreateOrder(Order newOrder);
     Order? UpdateOrder(Guid id, Order updatedOrder);
     bool DeleteOrder(Guid id);
+    Order? CancelOrder(Guid id);
+    Order? StartPreparingOrder(Guid id);
+    Order? CompleteOrder(Guid id);
+    Order? ApplyDiscountOrder(Guid id);
+
 }

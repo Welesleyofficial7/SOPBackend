@@ -8,9 +8,12 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-public class OrderDTO
+public class GetAllOrdersDTO
 {
-
+    [Key]
+    [Required]
+    public Guid Id { get; set; }
+    
     [Required]
     public Guid UserId { get; set; }
 
@@ -24,7 +27,7 @@ public class OrderDTO
     [Required]
     public decimal TotalCost { get; set; }
 
-    public OrderDTO(Guid userId, Status status, DateTime orderTime, decimal totalCost)
+    public GetAllOrdersDTO(Guid userId, Status status, DateTime orderTime, decimal totalCost)
     {
         UserId = userId;
         Status = status;
@@ -32,4 +35,3 @@ public class OrderDTO
         TotalCost = totalCost;
     }
 }
-

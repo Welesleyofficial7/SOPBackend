@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using MassTransit;
+using Newtonsoft.Json;
 
 namespace SOPBackend;
 
@@ -48,7 +49,8 @@ public class Promotion
         get { return _endDate; }
         set { _endDate = value; }
     }
-
+    
+    [JsonIgnore]
     public virtual ICollection<Order> Orders { get; set; }
 
     public Promotion(string code, decimal discount, DateTime startDate, DateTime endDate)

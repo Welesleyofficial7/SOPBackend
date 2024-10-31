@@ -1,3 +1,7 @@
+using SOPBackend.DTOs;
+using SOPBackend.Messages;
+using SOPBackend.Utils;
+
 namespace SOPBackend.Services;
 
 public class OrderService : IOrderService
@@ -20,7 +24,90 @@ public class OrderService : IOrderService
         _context.SaveChanges();
         return entry;
     }
+    
+    public Order? StartOrder(Guid id)
+    {
+        var entry = _context.Orders.Find(id) ?? null;
+        if (entry == null)
+        {
+            throw new Exception("Order not found!");
+        }
+        entry.Status = Status.Pending;
+        _context.Orders.Update(entry);
+        _context.SaveChanges();
 
+        return entry;
+    }
+    
+    public Order? ApplyDiscountOrder(Guid id)
+    {
+        var entry = _context.Orders.Find(id) ?? null;
+        if (entry == null)
+        {
+            throw new Exception("Order not found!");
+        }
+        entry.Status = Status.DiscountApplied;
+        _context.Orders.Update(entry);
+        _context.SaveChanges();
+
+        return entry;
+    }
+    
+    public Order? NotApplyDiscountOrder(Guid id)
+    {
+        var entry = _context.Orders.Find(id) ?? null;
+        if (entry == null)
+        {
+            throw new Exception("Order not found!");
+        }
+        entry.Status = Status.DiscountNotApplied;
+        _context.Orders.Update(entry);
+        _context.SaveChanges();
+
+        return entry;
+    }
+
+    public Order? CancelOrder(Guid id)
+    {
+        var entry = _context.Orders.Find(id) ?? null;
+        if (entry == null)
+        {
+            throw new Exception("Order not found!");
+        }
+        entry.Status = Status.Canceled;
+        _context.Orders.Update(entry);
+        _context.SaveChanges();
+
+        return entry;
+    }
+
+    public Order? StartPreparingOrder(Guid id)
+    {
+        var entry = _context.Orders.Find(id) ?? null;
+        if (entry == null)
+        {
+            throw new Exception("Order not found!");
+        }
+        entry.Status = Status.BeingPrepared;
+        _context.Orders.Update(entry);
+        _context.SaveChanges();
+
+        return entry;
+    }
+
+    public Order? CompleteOrder(Guid id)
+    {
+        var entry = _context.Orders.Find(id) ?? null;
+        if (entry == null)
+        {
+            throw new Exception("Order not found!");
+        }
+        entry.Status = Status.Completed;
+        _context.Orders.Update(entry);
+        _context.SaveChanges();
+
+        return entry;
+    }
     public Order? CreateOrder(Order newUser)
     {
         var check = _context.Orders.Find(newUser.Id);

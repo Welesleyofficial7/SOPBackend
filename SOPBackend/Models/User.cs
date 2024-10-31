@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using MassTransit;
+using Newtonsoft.Json;
 
 namespace SOPBackend;
 
@@ -51,6 +52,7 @@ public class User
         }
     }
     
+    [JsonIgnore]
     public virtual ICollection<Order> Orders { get; set; }
 
     public User(string Name, string Email, string PhoneNumber, string DestinationAddress)
@@ -65,6 +67,7 @@ public class User
     private User()
     {
     }
+    
 }
 
 

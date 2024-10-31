@@ -3,7 +3,9 @@ using SOPBackend.Services;
 using System;
 using System.Linq;
 using AutoMapper;
+using EasyNetQ;
 using SOPBackend.DTOs;
+using SOPBackend.Services.Utils;
 
 namespace SOPBackend.Controllers
 {
@@ -13,11 +15,13 @@ namespace SOPBackend.Controllers
     {
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
+        private readonly IBus _bus;
 
-        public UserController(IUserService userService, IMapper mapper)
+        public UserController(IUserService userService, IMapper mapper, IBus bus)
         {
             _userService = userService;
             _mapper = mapper;
+            _bus = bus;
         }
         
         [HttpGet("getAll", Name = "GetAllUsers")]
@@ -80,7 +84,7 @@ namespace SOPBackend.Controllers
         }
         
         [HttpPost("create", Name="CreateUser")]
-        public IActionResult CreateUser([FromBody] UserDTO newUserDto)
+        public async Task<IActionResult> CreateUser([FromBody] UserDTO newUserDto)
         {
         
             var newUser = _mapper.Map<User>(newUserDto);
@@ -89,6 +93,7 @@ namespace SOPBackend.Controllers
             Console.WriteLine("");
         
             var createdUser = _userService.CreateUser(newUser);
+            // await PublishNewUserMessage(newUser);
             var createdUserDTO = _mapper.Map<UserDTO>(createdUser);
             if (createdUser == null)
             {

@@ -1,4 +1,5 @@
 using SOPBackend.DTOs;
+using SOPBackend.Messages;
 using SOPBackend.Utils;
 
 namespace SOPBackend.MappingProfiles;
@@ -37,5 +38,24 @@ public class UserProfile : Profile
             .ForMember(dest => dest.MenuItemId, opt => opt.MapFrom(src => src.MenuItemId))
             .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
             .ForMember(dest => dest.Subtotal, opt => opt.MapFrom(src => src.Subtotal));
+        
+        CreateMap<Order, GetAllOrdersDTO>()
+            .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
+            .ForMember(dest => dest.OrderTime, opt => opt.MapFrom(src => src.OrderTime))
+            .ForMember(dest => dest.TotalCost, opt => opt.MapFrom(src => src.TotalCost));
+        
+        CreateMap<Promotion, PromotionDTO>()
+            .ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.Code))
+            .ForMember(dest => dest.Discount, opt => opt.MapFrom(src => src.Discount))
+            .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate))
+            .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.EndDate));
+
+        CreateMap<PromotionDTO, Promotion>()
+            .ForMember(dest => dest.Code, opt => opt.MapFrom(src => src.Code))
+            .ForMember(dest => dest.Discount, opt => opt.MapFrom(src => src.Discount))
+            .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate))
+            .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.EndDate));
+
     }
 }

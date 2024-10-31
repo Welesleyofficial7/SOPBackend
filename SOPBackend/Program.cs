@@ -1,3 +1,4 @@
+using EasyNetQ;
 using Microsoft.EntityFrameworkCore;
 using SOPBackend;
 using SOPBackend.MappingProfiles;
@@ -11,7 +12,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+var bus = RabbitHutch.CreateBus(builder.Configuration.GetConnectionString("AutoRabbitMQ"));
+builder.Services.AddSingleton<IBus>(bus);
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddScoped<IUserService, UserService>(); 
