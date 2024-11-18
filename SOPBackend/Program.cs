@@ -5,6 +5,7 @@ using SOPBackend.MappingProfiles;
 using SOPBackend.Repositories;
 using SOPBackend.Repositories.Interfaces;
 using SOPBackend.Services;
+using SOPBackend.Services.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,7 @@ builder.Services.AddDbContext<ApplicationContext>(options =>
 var bus = RabbitHutch.CreateBus(builder.Configuration.GetConnectionString("AutoRabbitMQ"));
 builder.Services.AddSingleton<IBus>(bus);
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddSingleton<KafkaProducer>();
 
 builder.Services.AddScoped<IUserService, UserService>(); 
 builder.Services.AddScoped<IOrderService, OrderService>(); 

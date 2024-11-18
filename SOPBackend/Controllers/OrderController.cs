@@ -18,8 +18,9 @@ public class OrderController : ControllerBase
     private readonly IUserService _userService;
     private readonly IMapper _mapper;
     private readonly IBus _bus;
+    private readonly KafkaProducer _kafkaProducer;
 
-    public OrderController(IOrderService orderService, IUserService userService, IPromotionService promotionService, IMenuItemService menuItemService, IOrderItemService orderItemService, IMapper iMapper, IBus bus)
+    public OrderController(IOrderService orderService, IUserService userService, IPromotionService promotionService, IMenuItemService menuItemService, IOrderItemService orderItemService, IMapper iMapper, IBus bus, KafkaProducer kafkaProducer)
     {
         _orderService = orderService;
         _menuItemService = menuItemService;
@@ -28,6 +29,7 @@ public class OrderController : ControllerBase
         _userService = userService;
         _mapper = iMapper;
         _bus = bus;
+        _kafkaProducer = kafkaProducer;
     }
     
         [HttpGet("getAll", Name = "GetAllOrders")]
@@ -197,6 +199,7 @@ public class OrderController : ControllerBase
             newOrder.OrderItems = orderItems;
 
             var createdOrder = _orderService.CreateOrder(newOrder);
+            await _kafkaProducer.ProduceAsync(createdOrder);
             
             var user = _userService.GetUserById(placeOrderDto.UserId);
             await PublishNewUserMessage(user, createdOrder.Id);

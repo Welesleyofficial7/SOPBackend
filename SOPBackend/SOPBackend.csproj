@@ -8,7 +8,9 @@
 
     <ItemGroup>
         <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+        <PackageReference Include="Confluent.Kafka" Version="2.6.0" />
         <PackageReference Include="EasyNetQ" Version="7.8.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.8" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.2" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
@@ -25,8 +27,14 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Reference Include="SOPBackend.KafkaMessages">
+        <HintPath>..\..\SOPBackend.KafkaMessages\SOPBackend.KafkaMessages\bin\Debug\net8.0\SOPBackend.KafkaMessages.dll</HintPath>
+      </Reference>
       <Reference Include="SOPBackend.Messages">
         <HintPath>..\..\SOPBackend.Messages\SOPBackend.Messages\bin\Debug\net8.0\SOPBackend.Messages.dll</HintPath>
+      </Reference>
+      <Reference Include="SOPContracts">
+        <HintPath>..\..\SOPContracts\SOPContracts\bin\Debug\net8.0\SOPContracts.dll</HintPath>
       </Reference>
     </ItemGroup>
 
