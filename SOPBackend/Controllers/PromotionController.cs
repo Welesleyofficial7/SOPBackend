@@ -3,12 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using SOPBackend.DTOs;
 using SOPBackend.Services;
 using System;
+using SOPContracts.Dtos;
 
 namespace SOPBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class PromotionController : ControllerBase
+    public class PromotionController : ControllerBase, IPromotionApi
     {
         private readonly IPromotionService _promotionService;
         private readonly IMapper _mapper;
@@ -90,7 +91,7 @@ namespace SOPBackend.Controllers
         }
         
         [HttpPost("create", Name = "CreatePromotion")]
-        public IActionResult CreatePromotion([FromBody] PromotionDTO promotionDto)
+        public IActionResult CreatePromotion([FromBody] PromotionRequest promotionDto)
         {
             if (!ModelState.IsValid)
             {
@@ -112,7 +113,7 @@ namespace SOPBackend.Controllers
         }
         
         [HttpPut("update/{id}", Name = "UpdatePromotion")]
-        public IActionResult UpdatePromotion(Guid id, [FromBody] PromotionDTO promotionDto)
+        public IActionResult UpdatePromotion(Guid id, [FromBody] PromotionRequest promotionDto)
         {
             if (!ModelState.IsValid)
             {

@@ -4,12 +4,13 @@ using System;
 using System.Linq;
 using AutoMapper;
 using SOPBackend.DTOs;
+using SOPContracts.Dtos;
 
 namespace SOPBackend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class OrderItemController : ControllerBase
+    public class OrderItemController : ControllerBase, IOrderItemApi
     {
         private readonly IOrderItemService _orderItemService;
         private readonly IMapper _mapper;
@@ -80,7 +81,7 @@ namespace SOPBackend.Controllers
         }
         
         [HttpPost("create", Name="CreateOrderItem")]
-        public IActionResult CreateOrderItem([FromBody] OrderItemDTO newOrderItemDto)
+        public IActionResult CreateOrderItem([FromBody] OrderItemRequest newOrderItemDto)
         {
         
             var newOrderItem = _mapper.Map<OrderItem>(newOrderItemDto);
@@ -98,7 +99,7 @@ namespace SOPBackend.Controllers
 
         
         [HttpPut("update/{id}", Name="UpdateOrderItem")]
-        public IActionResult UpdateOrderItem(Guid id, [FromBody] OrderItemDTO updatedOrderItemDTO)
+        public IActionResult UpdateOrderItem(Guid id, [FromBody] OrderItemRequest updatedOrderItemDTO)
         {
             var updatedOrderItem = _mapper.Map<OrderItem>(updatedOrderItemDTO);
             var orderItem = _orderItemService.UpdateOrderItem(id, updatedOrderItem);

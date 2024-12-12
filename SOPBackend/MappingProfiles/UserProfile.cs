@@ -1,4 +1,7 @@
+// using SOPBackend.DTOs;
+
 using SOPBackend.DTOs;
+using SOPContracts.Dtos;
 using SOPBackend.Messages;
 using SOPBackend.Utils;
 
@@ -10,31 +13,32 @@ public class UserProfile : Profile
 {
     public UserProfile()
     {
-        CreateMap<User, UserDTO>();  
-        CreateMap<UserDTO, User>();
-        CreateMap<Order, OrderDTO>()
+        CreateMap<User, UserResponse>();  
+        CreateMap<UserRequest, User>();
+        CreateMap<Order, OrderResponse>()
             .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status)); 
 
-        CreateMap<OrderDTO, Order>()
-            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Enum.Parse<Status>(src.Status.ToString())));
-        
-        CreateMap<MenuItem, MenuItemDTO>()
+        // CreateMap<OrderRequest, Order>()
+        //     .ForMember(dest => dest.Status, opt => opt.MapFrom(src => Enum.Parse<Status>(src.Status.ToString())));
+        //
+        CreateMap<MenuItem, MenuItemResponse>()
             .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category)); 
+        
+        
+        CreateMap<MenuItemRequest, MenuItem>()
+            .ForMember(dest => dest.Category, opt => opt.MapFrom(src => src.Category.ToString()));
 
-        CreateMap<MenuItemDTO, MenuItem>()
-            .ForMember(dest => dest.Category, opt => opt.MapFrom(src => Enum.Parse<Status>(src.Category.ToString())));
-
-        CreateMap<Order, PlaceOrderDTO>()
+        CreateMap<Order, OrderResponse>()
             .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
             .ForMember(dest => dest.PromotionId, opt => opt.MapFrom(src => src.PromotionId))
             .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.OrderItems));
 
-        CreateMap<PlaceOrderDTO, Order>()
+        CreateMap<OrderRequest, Order>()
             .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
             .ForMember(dest => dest.PromotionId, opt => opt.MapFrom(src => src.PromotionId))
             .ForMember(dest => dest.OrderItems, opt => opt.MapFrom(src => src.Items));
         
-        CreateMap<OrderItem, PlaceOrderItemDTO>()
+        CreateMap<OrderItem, OrderItemResponse>()
             .ForMember(dest => dest.MenuItemId, opt => opt.MapFrom(src => src.MenuItemId))
             .ForMember(dest => dest.Quantity, opt => opt.MapFrom(src => src.Quantity))
             .ForMember(dest => dest.Subtotal, opt => opt.MapFrom(src => src.Subtotal));

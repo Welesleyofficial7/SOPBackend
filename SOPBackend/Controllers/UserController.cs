@@ -6,12 +6,13 @@ using AutoMapper;
 using EasyNetQ;
 using SOPBackend.DTOs;
 using SOPBackend.Services.Utils;
+using SOPContracts.Dtos;
 
 namespace SOPBackend.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController : ControllerBase
+    public class UserController : ControllerBase, IUserApi
     {
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
@@ -84,7 +85,7 @@ namespace SOPBackend.Controllers
         }
         
         [HttpPost("create", Name="CreateUser")]
-        public async Task<IActionResult> CreateUser([FromBody] UserDTO newUserDto)
+        public async Task<IActionResult> CreateUser([FromBody] UserRequest newUserDto)
         {
         
             var newUser = _mapper.Map<User>(newUserDto);
@@ -107,7 +108,7 @@ namespace SOPBackend.Controllers
 
         
         [HttpPut("update/{id}", Name="UpdateUser")]
-        public IActionResult UpdateUser(Guid id, [FromBody] UserDTO updatedUserDTO)
+        public IActionResult UpdateUser(Guid id, [FromBody] UserRequest updatedUserDTO)
         {
             var updatedUser = _mapper.Map<User>(updatedUserDTO);
             var user = _userService.UpdateUser(id, updatedUser);

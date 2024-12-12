@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using MassTransit;
-using SOPBackend.Utils;
+using SOPBackend.Messages;
 
 namespace SOPBackend;
 

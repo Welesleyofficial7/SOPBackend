@@ -2,14 +2,17 @@ using AutoMapper;
 using EasyNetQ;
 using Microsoft.AspNetCore.Mvc;
 using SOPBackend.DTOs;
+using SOPBackend.Messages;
 using SOPBackend.Services;
 using SOPBackend.Services.Utils;
+using SOPContracts.Dtos;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SOPBackend.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class OrderController : ControllerBase
+public class OrderController : ControllerBase, IOrderApi
 {
     private readonly IOrderService _orderService;
     private readonly IMenuItemService _menuItemService;
@@ -92,6 +95,23 @@ public class OrderController : ControllerBase
             var message = user.ToUserMessage(id);
             await _bus.PubSub.PublishAsync(message);
         }
+
+        private async Task PublishNewPromotionMessage(Guid orderId, Guid userId, decimal totalCost, List<MenuItem> menuItems)
+        {
+            var message = new OrderForPromotionMessage
+            {
+                OrderId = orderId,
+                UserId = userId,
+                TotalCost = totalCost,
+                Items = menuItems.Select(item => new MenuItemMessage
+                {
+                    Name = item.Name,
+                    Price = item.Price,
+                    Category = item.Category
+                }).ToList()
+            };
+            await _bus.PubSub.PublishAsync(message);
+        }
         
         
         [HttpPut("cancelOrder/{id}", Name="CancelOrder")]
@@ -104,6 +124,18 @@ public class OrderController : ControllerBase
             }
             await PublishNewOrderMessage(final);
             return Ok("Order cancelled!");
+        }
+        
+        [HttpPut("applyDiscountForOrder/{id}", Name="ApplyDiscountForOrder")]
+        public async Task<IActionResult> ApplyDiscountForOrder(Guid id)
+        {
+            var final = _orderService.ApplyDiscountOrder(id);
+            if (final == null)
+            {
+                return NotFound("Order not found");
+            }
+            await PublishNewOrderMessage(final);
+            return Ok("Order discount applied!");
         }
         
         [HttpPut("startPrepareOrder/{id}", Name="StartPrepareOrder")]
@@ -134,13 +166,13 @@ public class OrderController : ControllerBase
         public IActionResult GetOrderById(Guid id)
         {
             var order = _orderService.GetOrderById(id);
-            var orderDTO = _mapper.Map<OrderDTO>(order);
+            var orderDTO = _mapper.Map<OrderResponse>(order);
             var orderWithLinks = AddOrderLinks(orderDTO, order.Id);
             return Ok(orderWithLinks);
         }
         
         [HttpPost("create", Name="CreateOrder")]
-        public IActionResult CreateUser([FromBody] OrderDTO newOrderDto)
+        public IActionResult CreateUser([FromBody] OrderRequest newOrderDto)
         {
         
             var newOrder = _mapper.Map<Order>(newOrderDto);
@@ -151,14 +183,14 @@ public class OrderController : ControllerBase
                 return BadRequest("Order already exists.");
             }
 
-            var createdOrderDTO = _mapper.Map<OrderDTO>(createdOrder);
+            var createdOrderDTO = _mapper.Map<OrderResponse>(createdOrder);
             AddOrderLinks(createdOrderDTO, createdOrder.Id);
         
             return CreatedAtRoute("GetOrderById", new { id = createdOrder.Id }, createdOrder);
         }
         
         [HttpPost("placeOrder", Name = "PlaceOrderWithItems")]
-        public async Task<IActionResult> PlaceOrderWithItems([FromBody] PlaceOrderDTO placeOrderDto)
+        public async Task<IActionResult> PlaceOrderWithItems([FromBody] OrderRequest placeOrderDto)
         {
             if (placeOrderDto == null || placeOrderDto.Items == null || !(placeOrderDto.Items.Count() > 0))
             {
@@ -167,10 +199,12 @@ public class OrderController : ControllerBase
             
             decimal totalCost = 0;
             var orderItems = new List<OrderItem>();
+            var menuItems = new List<MenuItem>();
 
-            foreach (var itemDto in placeOrderDto.Items)
+            foreach (OrderItemResponse itemDto in placeOrderDto.Items)
             {
                 var menuItem = _menuItemService.GetMenuItemById(itemDto.MenuItemId);
+                menuItems.Add(menuItem);
                 if (menuItem == null)
                 {
                     return NotFound($"Menu item with ID {itemDto.MenuItemId} not found.");
@@ -201,6 +235,9 @@ public class OrderController : ControllerBase
             var createdOrder = _orderService.CreateOrder(newOrder);
             await _kafkaProducer.ProduceAsync(createdOrder);
             
+            await StartPreparingOrder(createdOrder.Id);
+            Console.WriteLine(createdOrder.Id);
+            
             var user = _userService.GetUserById(placeOrderDto.UserId);
             await PublishNewUserMessage(user, createdOrder.Id);
             
@@ -211,27 +248,28 @@ public class OrderController : ControllerBase
             }
             await PublishNewOrderMessage(final);
             
-            var final2 = _orderService.ApplyDiscountOrder(createdOrder.Id);
+            await ApplyDiscountForOrder(createdOrder.Id);
             if (final == null)
             {
                 return NotFound("Order not found");
             }
             await PublishNewOrderMessage(final);
+            await PublishNewPromotionMessage(createdOrder.Id, createdOrder.UserId, totalCost, menuItems);
             
-            var createdOrderDto = _mapper.Map<PlaceOrderDTO>(createdOrder);
+            var createdOrderDto = _mapper.Map<OrderResponse>(createdOrder);
     
             var orderWithLinks = AddOrderLinks(createdOrderDto, createdOrder.Id);
             return CreatedAtRoute("GetOrderById", new { id = createdOrder.Id }, orderWithLinks);
         }
 
-
+        
         
         [HttpPut("update/{id}", Name="UpdateOrder")]
-        public IActionResult UpdateOrder(Guid id, [FromBody] OrderDTO updatedOrderDTO)
+        public IActionResult UpdateOrder(Guid id, [FromBody] OrderRequest updatedOrderDTO)
         {
             var updatedOrder = _mapper.Map<Order>(updatedOrderDTO);
             var order = _orderService.UpdateOrder(id, updatedOrder);
-            var orderDTO = _mapper.Map<OrderDTO>(order);
+            var orderDTO = _mapper.Map<OrderResponse>(order);
             var orderWithLinks = AddOrderLinks(orderDTO, updatedOrder.Id);
             return Ok(orderWithLinks);
         }
@@ -248,7 +286,7 @@ public class OrderController : ControllerBase
             return NoContent();
         }
         
-        private object AddOrderLinks(OrderDTO order, Guid objId)
+        private object AddOrderLinks(OrderResponse order, Guid objId)
         {
             return new
             {

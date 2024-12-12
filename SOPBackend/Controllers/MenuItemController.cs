@@ -1,13 +1,16 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using SOPBackend.Controllers;
 using SOPBackend.DTOs;
 using SOPBackend.Services;
+using SOPContracts.Dtos;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace SOPBackend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class MenuItemController : ControllerBase
+    public class MenuItemController : ControllerBase, IMenuItemApi
     {
         private readonly IMenuItemService _menuItemService;
         private readonly IMapper _mapper;
@@ -77,12 +80,12 @@ namespace SOPBackend.Controllers
                 return NotFound();
             }
 
-            var menuItemWithLinks = AddMenuItemLinks(menuItem);
+            var menuItemWithLinks = AddMenuItemLinks(_mapper.Map<MenuItemResponse>(menuItem));
             return Ok(menuItemWithLinks);
         }
-
+        
         [HttpPost("create", Name = "CreateMenuItem")]
-        public IActionResult CreateMenuItem([FromBody] MenuItemDTO newMenuItemDto)
+        public IActionResult CreateMenuItem([FromBody] MenuItemRequest newMenuItemDto)
         {
             var newMenuItem = _mapper.Map<MenuItem>(newMenuItemDto);
             var createdMenuItem = _menuItemService.CreateMenuItem(newMenuItem);
@@ -91,14 +94,16 @@ namespace SOPBackend.Controllers
             {
                 return BadRequest("Menu item already exists.");
             }
+            
+            var wrappedMenuItem = _mapper.Map<MenuItemResponse>(createdMenuItem);
 
-            AddMenuItemLinks(createdMenuItem);
+            AddMenuItemLinks(wrappedMenuItem);
 
             return CreatedAtRoute("GetMenuItemById", new { id = createdMenuItem.Id }, createdMenuItem);
         }
-
+        
         [HttpPut("update/{id}", Name = "UpdateMenuItem")]
-        public IActionResult UpdateMenuItem(Guid id, [FromBody] MenuItemDTO updatedMenuItemDto)
+        public IActionResult UpdateMenuItem(Guid id, [FromBody] MenuItemRequest updatedMenuItemDto)
         {
             var updatedMenuItem = _mapper.Map<MenuItem>(updatedMenuItemDto);
             var menuItem = _menuItemService.UpdateMenuItem(id, updatedMenuItem);
@@ -107,11 +112,13 @@ namespace SOPBackend.Controllers
             {
                 return NotFound("Menu item not found.");
             }
+            
+            var wrappedMenuItem = _mapper.Map<MenuItemResponse>(menuItem);
 
-            var menuItemWithLinks = AddMenuItemLinks(menuItem);
+            var menuItemWithLinks = AddMenuItemLinks(wrappedMenuItem);
             return Ok(menuItemWithLinks);
         }
-
+        
         [HttpDelete("delete/{id}", Name = "DeleteMenuItem")]
         public IActionResult DeleteMenuItem(Guid id)
         {
@@ -125,7 +132,7 @@ namespace SOPBackend.Controllers
             return NoContent();
         }
 
-        private object AddMenuItemLinks(MenuItem menuItem)
+        private object AddMenuItemLinks(MenuItemResponse menuItem)
         {
             return new
             {
